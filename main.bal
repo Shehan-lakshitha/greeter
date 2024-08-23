@@ -1,4 +1,6 @@
 import ballerina/io;
+import ballerina/udp;
+import ballerina/http;
 
 string greeting = "Hello";
 int[] arr= [1,2,3,4,5];
@@ -26,6 +28,20 @@ public function main() returns error?{
 
     any resultMatch = mtest(KEY);
     io:println("Match result: ", resultMatch);
+
+
+    Employee? e = t["John"];
+    if (e is Employee) {
+        io:println("Employee found: ", e);
+    } else {
+        io:println("Employee not found");
+    }
+
+    increaseSalary(1000);
+    foreach Employee i in t {
+        io:println("New employee salary: ", i);
+    }
+
 
 }
 
@@ -76,5 +92,36 @@ function mtest(any v) returns string {
         _ => {
             return "any";
         }
+    }
+}
+
+service on new udp:Listener(8080) {
+
+    remote function onDatagram(udp:Datagram & readonly dg) {
+        io:println("bytes received: ", dg.data.length());
+    }
+}
+
+service /hello on new http:Listener(8080) {
+    resource function get  [string name]() returns string {
+        return "Hello, " + name;
+    }
+    
+}
+
+//table structure
+type Employee record {
+    readonly string name;
+    int salary;
+};
+
+table<Employee> key(name) t = table [
+    {name: "John", salary: 2000},
+    {name: "Doe", salary: 4000}
+];
+
+function increaseSalary (int amount) {
+    foreach Employee e in t {
+        e.salary += amount;
     }
 }
